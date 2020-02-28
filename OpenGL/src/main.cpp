@@ -6,6 +6,8 @@
 #include <vector>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include "ArrayBuffer.h"
+#include "VertexArray.h"
 
 
 std::tuple<std::string, std::string> ParseShaders(const std::string & file_path) {
@@ -110,25 +112,18 @@ int main(void)
 
 	unsigned char indecies[] = { 0,1,2,	//1st triangle
 								 0,2,3 };	//2nd triangle
-	//create buffer and fill it with data
-	unsigned int buffer_id;
-	glGenBuffers(1, &buffer_id);
-	glBindBuffer(GL_ARRAY_BUFFER, buffer_id);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 2 * 4, postions, GL_STATIC_DRAW);
+	
+	VertexArrayBuffer vb(postions, sizeof(float) * 2 * 4);
+	VertexAttribLayout layout;
+	layout.push<float>(2, false);
+	VertexArrayObject vao;
+	vao.AddLayout(layout, vb);
+	IndexBuffer ib(indecies, sizeof(unsigned char) * 2 * 3);
 
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, false, 0, NULL);
-
-	//create index buffer object
-	unsigned int ibo;
-	glGenBuffers(1, &ibo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned char) * 2 * 3, indecies, GL_STATIC_DRAW);
 
 	auto [vertex_shader, fragment_shader] = ParseShaders("Resources/Shaders/basic.shader");
 	unsigned int program = CreateProgram({ {vertex_shader, GL_VERTEX_SHADER }, {fragment_shader, GL_FRAGMENT_SHADER } });
 	glUseProgram(program);
-	
 
 	if (err != GLEW_OK) {
 		std::cout << "error occured!" << std::endl;
