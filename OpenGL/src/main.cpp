@@ -125,6 +125,9 @@ int main(void)
 	unsigned int program = CreateProgram({ {vertex_shader, GL_VERTEX_SHADER }, {fragment_shader, GL_FRAGMENT_SHADER } });
 	glUseProgram(program);
 
+	unsigned int u_color = glGetUniformLocation(program, "u_color");
+	glProgramUniform4f(program, u_color, 1.0f, 0.0f, 1.0f, 1.0f);
+
 	if (err != GLEW_OK) {
 		std::cout << "error occured!" << std::endl;
 		return 1;
