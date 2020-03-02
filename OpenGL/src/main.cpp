@@ -1,84 +1,10 @@
 #include <iostream>
-#include <tuple>
-#include <fstream>
-#include <string>
-#include <sstream>
-#include <vector>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "ArrayBuffer.h"
 #include "VertexArray.h"
+#include "Shader.h"
 
-
-std::tuple<std::string, std::string> ParseShaders(const std::string & file_path) {
-	std::ifstream inputFile(file_path);
-	std::string line;
-	enum ShaderType {
-		None = -1,
-		Vertex = 0,
-		Fragment = 1
-	};
-	ShaderType shader_mode = ShaderType::None;
-	std::stringstream ss[2];
-
-	while (std::getline(inputFile, line)) {
-		if (line.find("#ShaderBegin") != std::string::npos) {
-			if (line.find("VertexShader") != std::string::npos) {
-				shader_mode = ShaderType::Vertex;
-			}
-			else if (line.find("FragmentShader") != std::string::npos) {
-				shader_mode = ShaderType::Fragment;
-			}
-		}
-		else {
-			ss[shader_mode] << line << std::endl;
-		}
-	}
-
-	return std::make_tuple<std::string, std::string>(ss[ShaderType::Vertex].str(), ss[ShaderType::Fragment].str());
-}
-
-unsigned int CreateProgram(const std::vector<std::pair<std::string, unsigned int>>& shaders) {
-
-	unsigned int program = glCreateProgram();
-	for (auto & shader : shaders) {
-		unsigned int id = glCreateShader(shader.second);
-		const char * src = shader.first.c_str();
-		glShaderSource(id, 1, &src, NULL);
-		glCompileShader(id);
-		int compile_status;
-		glGetShaderiv(id, GL_COMPILE_STATUS, &compile_status);
-		if (compile_status != GL_TRUE) {
-			GLsizei log_length = 0;
-			GLchar message[1024];
-			glGetShaderInfoLog(id, 1024, &log_length, message);
-			std::cout << "ERROR! Compiling Shader:\n" << message << std::endl;
-			std::exit(EXIT_FAILURE);
-		}
-		glAttachShader(program, id);
-	}
-	int link_status;
-	glLinkProgram(program);
-	glGetProgramiv(program, GL_LINK_STATUS, &link_status);
-	if (link_status != GL_TRUE) {
-		GLsizei log_length = 0;
-		GLchar message[1024];
-		glGetProgramInfoLog(program, 1024, &log_length, message);
-		std::cout << "ERROR! Linking Shaders:\n" << message << std::endl;
-		std::exit(EXIT_FAILURE);
-	}
-	glValidateProgram(program);
-	int validation_status;
-	glGetProgramiv(program, GL_VALIDATE_STATUS, &validation_status);
-	if (validation_status != GL_TRUE) {
-		GLsizei log_length = 0;
-		GLchar message[1024];
-		glGetProgramInfoLog(program, 1024, &log_length, message);
-		std::cout << "ERROR! Application is not valid:\n" << message << std::endl;
-		std::exit(EXIT_FAILURE);
-	}
-	return program;
-}
 
 int main(void)
 {
@@ -104,6 +30,10 @@ int main(void)
 	glfwMakeContextCurrent(window);
 
 	unsigned int err = glewInit();
+	if (err != GLEW_OK) {
+		std::cout << "error occured!" << std::endl;
+		return 1;
+	}
 	
 	float postions[] = { -0.5f, -0.5f,	//0
 						  0.5f , -0.5f,	//1
@@ -119,19 +49,18 @@ int main(void)
 	VertexArrayObject vao;
 	vao.AddLayout(layout, vb);
 	IndexBuffer ib(indecies, sizeof(unsigned char) * 2 * 3);
+	ShaderProgram program("Resources/Shaders/basic.shader");
+	
+	//TODO: use operator overloading
+	unsigned int u_color = glGetUniformLocation(program.GetId(), "u_color");
+	glProgramUniform4f(program.GetId(), u_color, 1.0f, 0.0f, 1.0f, 1.0f);
 
+	
 
-	auto [vertex_shader, fragment_shader] = ParseShaders("Resources/Shaders/basic.shader");
-	unsigned int program = CreateProgram({ {vertex_shader, GL_VERTEX_SHADER }, {fragment_shader, GL_FRAGMENT_SHADER } });
-	glUseProgram(program);
-
-	unsigned int u_color = glGetUniformLocation(program, "u_color");
-	glProgramUniform4f(program, u_color, 1.0f, 0.0f, 1.0f, 1.0f);
-
-	if (err != GLEW_OK) {
-		std::cout << "error occured!" << std::endl;
-		return 1;
-	}
+	vb.UnBind();
+	vao.Bind();
+	ib.Bind();
+	program.Bind();
 
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))
