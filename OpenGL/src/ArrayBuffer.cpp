@@ -12,6 +12,7 @@ ArrayBuffer::~ArrayBuffer()
 
 VertexArrayBuffer::VertexArrayBuffer(const void * data, unsigned int size)
 {
+	//create, set, configure
 	glGenBuffers(1, &m_Renderer);
 	glBindBuffer(GL_ARRAY_BUFFER, m_Renderer);
 	glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
@@ -35,6 +36,7 @@ void VertexArrayBuffer::UnBind() const
 
 ElementArrayBuffer::ElementArrayBuffer(const void * data, unsigned int size)
 {
+	//create, set, configure
 	glGenBuffers(1, &m_Renderer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Renderer);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);

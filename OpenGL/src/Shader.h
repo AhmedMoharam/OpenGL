@@ -5,10 +5,13 @@
 class Shader
 {
 public:
-	Shader();
-	virtual ~Shader() = 0;
+	Shader() = default;
+	virtual ~Shader() {};
 	virtual void Compile() = 0;
 	virtual unsigned int GetId() = 0;
+
+protected:
+	void CompileShaderId(unsigned int id);
 	
 };
 
@@ -20,7 +23,6 @@ public:
 	void Compile() override;
 	unsigned int GetId() override;
 private:
-	std::string m_src;
 	unsigned int m_id;
 };
 
@@ -32,7 +34,6 @@ public:
 	void Compile() override;
 	unsigned int GetId() override;
 private:
-	std::string m_src;
 	unsigned int m_id;
 };
 

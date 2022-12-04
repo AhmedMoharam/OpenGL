@@ -4,20 +4,29 @@
 #include <fstream>
 #include <sstream>
 
-//interface
-Shader::Shader()
-{
-}
 
-Shader::~Shader()
+//Shader
+void Shader::CompileShaderId(unsigned int id)
 {
+	glCompileShader(id);
+	int compile_status;
+	glGetShaderiv(id, GL_COMPILE_STATUS, &compile_status);
+	if (compile_status != GL_TRUE) {
+		GLsizei log_length = 0;
+		GLchar message[1024];
+		glGetShaderInfoLog(id, 1024, &log_length, message);
+		std::cout << "ERROR! Compiling Shader:\n" << message << std::endl;
+		std::exit(EXIT_FAILURE);
+	}
 }
 
 
 //vertexShader
-VertexShader::VertexShader(const std::string & src) : m_src(src)
+VertexShader::VertexShader(const std::string & src)
 {
 	m_id = glCreateShader(GL_VERTEX_SHADER);
+	const char * source = src.c_str();
+	glShaderSource(m_id, 1, &source, NULL);
 }
 
 VertexShader::~VertexShader()
@@ -27,18 +36,7 @@ VertexShader::~VertexShader()
 
 void VertexShader::Compile()
 {
-	const char * src = m_src.c_str();
-	glShaderSource(m_id, 1, &src, NULL);
-	glCompileShader(m_id);
-	int compile_status;
-	glGetShaderiv(m_id, GL_COMPILE_STATUS, &compile_status);
-	if (compile_status != GL_TRUE) {
-		GLsizei log_length = 0;
-		GLchar message[1024];
-		glGetShaderInfoLog(m_id, 1024, &log_length, message);
-		std::cout << "ERROR! Compiling Shader:\n" << message << std::endl;
-		std::exit(EXIT_FAILURE);
-	}
+	CompileShaderId(m_id);
 }
 
 unsigned int VertexShader::GetId()
@@ -48,9 +46,11 @@ unsigned int VertexShader::GetId()
 
 
 //FragmentShader
-FragmentShader::FragmentShader(const std::string & src) : m_src(src)
+FragmentShader::FragmentShader(const std::string & src)
 {
 	m_id = glCreateShader(GL_FRAGMENT_SHADER);
+	const char * source = src.c_str();
+	glShaderSource(m_id, 1, &source, NULL);
 }
 
 FragmentShader::~FragmentShader()
@@ -60,18 +60,7 @@ FragmentShader::~FragmentShader()
 
 void FragmentShader::Compile()
 {
-	const char * src = m_src.c_str();
-	glShaderSource(m_id, 1, &src, NULL);
-	glCompileShader(m_id);
-	int compile_status;
-	glGetShaderiv(m_id, GL_COMPILE_STATUS, &compile_status);
-	if (compile_status != GL_TRUE) {
-		GLsizei log_length = 0;
-		GLchar message[1024];
-		glGetShaderInfoLog(m_id, 1024, &log_length, message);
-		std::cout << "ERROR! Compiling Shader:\n" << message << std::endl;
-		std::exit(EXIT_FAILURE);
-	}
+	CompileShaderId(m_id);
 }
 
 unsigned int FragmentShader::GetId()
@@ -131,7 +120,8 @@ void ShaderProgram::ParseShaderFile()
 			}
 		}
 		else {
-			ss[shader_mode] << line << std::endl;
+			if(shader_mode != ShaderType::None)
+				ss[shader_mode] << line << std::endl;
 		}
 	}
 
@@ -168,4 +158,3 @@ void ShaderProgram::Compile()
 		std::exit(EXIT_FAILURE);
 	}
 }
-
